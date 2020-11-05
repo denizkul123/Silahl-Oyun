@@ -1,0 +1,324 @@
+import pygame
+import time
+import random
+
+pygame.init()
+
+
+class Mermi:
+    def __init__(self):
+        self.MermiResmi = pygame.image.load("mermi.png").convert_alpha()
+        self.MermiResmi = pygame.transform.scale(self.MermiResmi, (21, 11))
+        self.MermiX = 350
+        self.MermiY = 350
+        self.durum = ""
+        self.ilkdegisim = "ilk_durum"
+        self.hareket_yonu = "belirlenmedi"
+        self.hareket_yonu_kopya = self.hareket_yonu
+        self.TepmeListesi = ["sek", "sekme"]
+        self.duseydogrultu = "belirlenmedi"
+        self.TepmeBuyukluguListesi = [-0.25, 0.25]
+
+    def Hareket(self, durum, smgX, smgY):
+        if self.hareket_yonu == "belirlenmedi":
+            if durum == "sağ":
+                self.MermiX = smgX + 68
+                self.MermiY = smgY + 5
+                self.durum = "sağ"
+                self.Tepme = random.choice(self.TepmeListesi)
+
+            elif durum == "sol":
+                self.MermiX = smgX + 5
+                self.MermiY = smgY + 3
+                self.durum = "sol"
+                self.Tepme = random.choice(self.TepmeListesi)
+                self.MermiResmi = pygame.transform.flip(self.MermiResmi, True, False)
+
+            self.hareket_yonu = "belirlendi"
+
+        else:
+            if self.durum == "sağ":
+                if self.Tepme == "sek":
+                    self.duseydogrultu = "sek"
+                    self.TepmeBuyuklugu = random.choice(self.TepmeBuyukluguListesi)
+                    self.Tepme = "değiştirildi"
+
+                if self.duseydogrultu == "sek":
+                    self.MermiY += self.TepmeBuyuklugu
+
+                self.MermiX += 7
+
+            elif self.durum == "sol":
+                if self.Tepme == "sek":
+                    self.duseydogrultu = "sek"
+                    self.TepmeBuyuklugu = random.choice(self.TepmeBuyukluguListesi)
+                    self.Tepme = "değiştirildi"
+
+                if self.duseydogrultu == "sek":
+                    self.MermiY += self.TepmeBuyuklugu
+                self.MermiX -= 7
+
+    def CollidKare(self, Genislik, Yukseklik):
+        return pygame.Rect(self.MermiX, self.MermiY, Genislik, Yukseklik)
+
+
+class MenuAssets:
+    def __init__(self):
+        self.Basla = pygame.image.load("Menu Buttons/Large Buttons/Large Buttons/Continue Button.png").convert_alpha()
+        self.Basla = pygame.transform.scale(self.Basla, (300, 100))
+        self.BaslaX = 470
+        self.BaslaY = 400
+        self.BaslaCollider = pygame.Rect(self.BaslaX, self.BaslaY, 300, 100)
+
+        self.Ayarlar = pygame.image.load("Menu Buttons/Square Buttons/Square Buttons/Settings Square Button.png").\
+            convert_alpha()
+        self.Ayarlar = pygame.transform.scale(self.Ayarlar, (55, 55))
+        self.AyarlarX = 1175
+        self.AyarlarY = 55
+        self.AyarlarCollider = pygame.Rect(self.AyarlarX, self.AyarlarY, 55, 55)
+
+
+class Dusman:
+    def __init__(self):
+        self.DusmanResmi = pygame.image.load("kare.jpg").convert_alpha()
+        self.KareX = 1000
+        self.KareY = 440
+
+    def Cizdir(self, pencere):
+        pencere.blit(self.DusmanResmi, (self.KareX, self.KareY))
+
+    def Saldir(self, smgX, smgY, smg):
+        if (self.KareX < smgX) and (self.KareY < smgY):
+            self.KareX += 3
+            self.KareY += 1
+
+        elif (self.KareX < smgX) and (self.KareY > smgY):
+            self.KareX += 3
+            self.KareY -= 1
+
+        elif (self.KareX > smgX) and (self.KareY < smgY):
+            self.KareX -= 3
+            self.KareY += 1
+
+        elif (self.KareX > smgX) and (self.KareY > smgY):
+            self.KareX -= 3
+            self.KareY -= 1
+
+        elif (not self.Collid(100, 100).colliderect(smg)) and (self.KareX < smgX):
+            self.KareX += 3
+
+        elif (not self.Collid(100, 100).colliderect(smg)) and (self.KareX > smgX):
+            self.KareX -= 3
+
+    def Collid(self, Genislik, Yukseklik):
+        return pygame.Rect(self.KareX, self.KareY, Genislik, Yukseklik)
+
+
+class BizimOyunumuz:
+    def __init__(self):
+        self.pencere_yuksekligi = 720
+        self.pencere_genisligi = 1280
+        self.Pencere = pygame.display.set_mode((self.pencere_genisligi, self.pencere_yuksekligi))
+        pygame.display.set_caption("Call Of SMG")
+        self.Clock = pygame.time.Clock()
+
+        self.smg = pygame.image.load("smg.png").convert_alpha()
+        self.smg = pygame.transform.scale(self.smg, (102, 45))
+        self.smgX = 350
+        self.smgY = 350
+        self.smgdurumu = ""
+        self.durum = "devam"
+        self.ilkdegisim = "ilk_durum"
+        self.smgCollider = pygame.Rect(self.smgX, self.smgY, 102, 45)
+
+        self.mermi = pygame.image.load("mermi.png").convert_alpha()
+        self.mermi = pygame.transform.scale(self.mermi, (20, 10))
+        self.mermiX = self.smgX + 100
+        self.mermiY = self.smgY + 10
+        self.MermiCollider = pygame.Rect(self.mermiX, self.mermiY, 20, 10)
+        self.mermidurumu = "sakin"
+        self.MermiListesi = []
+        self.Mermi = Mermi()
+        self.ilkmermi = "sıkmadı"
+        self.mouseX, self.mouseY = pygame.mouse.get_pos()
+        self.MouseCollid = pygame.Rect(self.mouseX, self.mouseY, 1, 1)
+
+        self.Dusman = Dusman()
+        self.Assests = MenuAssets()
+
+        self.Arkaplan = pygame.image.load("arkaplan.png").convert()
+        self.ilkzaman = time.time()
+        self.sonzaaman = time.time()
+        self.ilkdurum = "boşta"
+        self.mermizamani = 0.3
+        self.mermiolustur = ""
+
+        self.OyuncuCan = 10
+        self.OyuncuCanBariKare = pygame.image.load("Can Barı Kare.png").convert_alpha()
+        self.OyuncuCanBariKare = pygame.transform.scale(self.OyuncuCanBariKare, (160, 40))
+        self.OyuncuCanBariKareX = 30
+        self.OyuncuCanBariKareY = 30
+        self.OyuncuCanBari = pygame.image.load("Can Barı.png").convert_alpha()
+        self.OyuncuCanBari = pygame.transform.scale(self.OyuncuCanBari, (self.OyuncuCan * 14, 24))
+        self.OyuncuCanBariX = self.OyuncuCanBariKareX + 10
+        self.OyuncuCanBariY = self.OyuncuCanBariKareY + 8
+        self.cangittizaman = self.ilkzaman
+
+        self.skor = 0
+        self.OyunDurumu = "Başlangıç"
+        self.Tus = pygame.key.get_pressed()
+
+    def Cizim(self):
+
+        self.Pencere.blit(self.Arkaplan, (0, 0))
+
+        self.OyunDurumu = self.OyunDurumu.upper()
+
+        if self.OyunDurumu == "BAŞLANGIÇ":
+            self.Pencere.blit(self.Assests.Basla, (self.Assests.BaslaX, self.Assests.BaslaY))
+            self.Pencere.blit(self.Assests.Ayarlar, (self.Assests.AyarlarX, self.Assests.AyarlarY))
+
+        elif self.OyunDurumu == "AYARLAR":
+            self.Pencere.blit(pygame.font.SysFont("batangbatangchegungsuhgungsuhche", 32).render
+                              ("Ayarlar;", True, (0, 0, 0)), (500, 50))
+
+            self.Pencere.blit(self.smg, (230, 150))
+            self.Pencere.blit(pygame.font.SysFont("batangbatangchegungsuhgungsuhche", 32).render
+                              ("Hareket için WASD", True, (0, 0, 0)), (450, 150))
+
+            self.Pencere.blit(self.Mermi.MermiResmi, (230, 250))
+            self.Pencere.blit(pygame.font.SysFont("batangbatangchegungsuhgungsuhche", 32).render
+                              ("Mermi sıkmak için sol tık", True, (0, 0, 0)), (450, 250))
+
+            self.Pencere.blit(self.Dusman.DusmanResmi, (230, 350))
+            self.Pencere.blit(pygame.font.SysFont("batangbatangchegungsuhgungsuhche", 32).render
+                              ("Düşman, sana sürekli saldırır", True, (0, 0, 0)), (450, 350))
+
+            self.Pencere.blit(self.OyuncuCanBariKare, (230, 500))
+            self.Pencere.blit(self.OyuncuCanBari, (240, 508))
+            self.Pencere.blit(pygame.font.SysFont("batangbatangchegungsuhgungsuhche", 32).render
+                              ("Can Barı, Düşman Sana Saldırdıkça Düşer", True, (0, 0, 0)), (450, 504))
+
+        elif self.OyunDurumu == "OYUN":
+            self.Pencere.blit(self.smg, (self.smgX, self.smgY))
+            self.Dusman.Cizdir(self.Pencere)
+            self.Pencere.blit(self.OyuncuCanBariKare, (self.OyuncuCanBariKareX, self.OyuncuCanBariKareY))
+            self.Pencere.blit(self.OyuncuCanBari, (self.OyuncuCanBariX, self.OyuncuCanBariY))
+            self.Pencere.blit(pygame.font.SysFont("batangbatangchegungsuhgungsuhche", 32).render
+                              (str(self.skor), True, (0, 0, 0)), (1100, 50))
+
+            self.Dusman.Saldir(self.smgX, self.smgY, pygame.Rect(self.smgX, self.smgX, 102, 45))
+
+            if self.mermidurumu == "sıktı":
+
+                if (self.mermiolustur == "bekle") and (self.smgdurumu != ""):
+                    self.MermiListesi.append(Mermi())
+                    self.mermiolustur = ""
+
+                self.MermiCollider = pygame.Rect(self.mermiX, self.mermiY, 20, 10)
+
+                for mermi in self.MermiListesi:
+                    mermi.Hareket(self.smgdurumu, self.smgX, self.smgY)
+                    self.Pencere.blit(mermi.MermiResmi, (mermi.MermiX, mermi.MermiY))
+                    if mermi.MermiX > self.pencere_genisligi + 5:
+                        self.MermiListesi.pop(self.MermiListesi.index(mermi))
+
+                    if mermi.CollidKare(21, 11).colliderect(self.Dusman.Collid(100, 100)):
+                        self.skor += 1
+                        self.MermiListesi.pop(self.MermiListesi.index(mermi))
+
+        if self.OyuncuCan == 0:
+            self.OyunDurumu = "ÖLDÜ"
+            self.Pencere.blit(pygame.font.SysFont("batangbatangchegungsuhgungsuhche", 40).
+                              render("Öldün!", True, (0, 0, 0)), (550, 350))
+            self.Pencere.blit(pygame.font.SysFont("batangbatangchegungsuhgungsuhche", 40).
+                              render("Tekrar Oynamak İçin Boşluk Tuşuna Bas!", True, (0, 0, 0)), (225, 420))
+
+        self.Clock.tick(60)
+        pygame.display.update()
+
+    def Oyun(self):
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return "Son"
+
+        self.Tus = pygame.key.get_pressed()
+        if self.Tus[pygame.K_ESCAPE]:
+            return "Son"
+
+        self.mouseX, self.mouseY = pygame.mouse.get_pos()
+        self.MouseCollid = pygame.Rect(self.mouseX, self.mouseY, 1, 1)
+
+        self.OyunDurumu = self.OyunDurumu.upper()
+
+        if self.OyunDurumu == "BAŞLANGIÇ":
+            if (pygame.mouse.get_pressed()[0] == 1) and (self.MouseCollid.colliderect(self.Assests.BaslaCollider)):
+                self.OyunDurumu = "Oyun"
+
+            if self.MouseCollid.colliderect(self.Assests.AyarlarCollider) and (pygame.mouse.get_pressed()[0] == 1):
+                self.OyunDurumu = "Ayarlar"
+
+        elif self.OyunDurumu == "OYUN":
+            self.ilkzaman = time.time()
+
+            self.OyuncuCanBari = pygame.transform.scale(self.OyuncuCanBari, (self.OyuncuCan * 14, 24))
+
+            self.smgCollider = pygame.Rect(self.smgX, self.smgY, 102, 45)
+            if (self.Dusman.Collid(100, 100).colliderect(self.smgCollider)) and (self.OyuncuCan != 0) and \
+                    (self.ilkzaman - self.cangittizaman > 0.2):
+                self.OyuncuCan -= 1
+                self.cangittizaman = time.time()
+
+            if self.ilkdurum == "bekle":
+                self.mermizamani = self.ilkzaman - self.sonzaaman
+
+            if self.mermizamani > 0.3:
+                self.ilkdurum = "boşta"
+
+            elif self.mermizamani < 0.3:
+                self.ilkdurum = "bekle"
+
+            if (self.ilkdurum == "boşta") and (pygame.mouse.get_pressed()[0] == 1) and (self.smgdurumu != ""):
+                self.ilkdurum = "bekle"
+                self.mermidurumu = "sıktı"
+                self.sonzaaman = time.time()
+                self.mermiolustur = self.ilkdurum
+
+            if self.Tus[pygame.K_a]:
+                self.smgX -= 5
+                self.smgdurumu = "sol"
+                if (self.smgdurumu == "sol") and (self.durum != "tamamsol"):
+                    self.smg = pygame.transform.flip(self.smg, True, False)
+                    self.durum = "tamamsol"
+                    self.ilkdegisim = "dfısf"
+
+            if self.Tus[pygame.K_d]:
+                self.smgX += 5
+                self.smgdurumu = "sağ"
+
+                if (self.smgdurumu == "sağ") and (self.durum != "tamamsağ") and (self.ilkdegisim != "ilk_durum"):
+                    self.smg = pygame.transform.flip(self.smg, True, False)
+                    self.durum = "tamamsağ"
+
+            if self.Tus[pygame.K_w]:
+                self.smgY -= 5
+
+            if self.Tus[pygame.K_s]:
+                self.smgY += 5
+
+        elif self.OyunDurumu == "ÖLDÜ":
+            if self.Tus[pygame.K_SPACE]:
+                self.__init__()
+
+        self.Cizim()
+
+
+Oyun = BizimOyunumuz()
+
+while True:
+    Durum = Oyun.Oyun()
+    if Durum == "Son":
+        break
+
+pygame.quit()
